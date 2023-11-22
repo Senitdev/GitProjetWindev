@@ -1,0 +1,1472 @@
+;
+		var sNomParam;
+		var sValeurParam;
+		if (oParam instanceof WDTypeAvance && (undefined !== oParam.ms_sNomPourParam))
+		{
+			sNomParam = "PO";
+			sValeurParam = oParam.ms_sNomPourParam + "|" + encodeURIComponent(JSON.stringify(oParam));
+		}
+		else
+		{
+			sNomParam = "PA";
+			// GP 17/11/2020 : QW329762 : Lors de l'envoi vers le serveur le DINO Couleur doit être converti en entier (c'est son format "natif" en code serveur).
+			if (oParam instanceof this.WDDinoCouleur)
+			{
+				sValeurParam = oParam.toNumber();
+			}
+			else if ("boolean" === typeof oParam)
+			{
+				sValeurParam = oParam ? "1" : "0";
+			}
+			else
+			{
+				sValeurParam = encodeURIComponent(String(oParam));
+			}
+		}
+		tabParams[nIndiceReel] = sNomParam + nIndiceReel + "=" + sValeurParam;
+	}
+	return tabParams.join("&");
+};
+
+// Recupere l'action depuis le location
+clWDUtil._sGetPageActionDepuisLocation = function _sGetPageActionDepuisLocation(sAction)
+{
+	// GP 10/02/2016 : TB96504 : Suite à QW262788 (qui lui suis TB94605) on se retrouve avec deux fois le querystring dans les URLs avec IE.
+	// La source du problème : si l'attribut action est vide (ce qui est invalide en HTML5), les navigateurs retournent des valeurs différentes (et parfois invalide) quand on intérroge form.action.
+	// => Donc on passe dans du code de compatibilité et en particulier ici.
+	// Sauf que maintenant on retourne un action valide (Suite à QW262788 (qui lui suis TB94605)) donc ce qu'il faut faire et de supprimer le code de compatibilité
+	// => !!! A faire un jour !!! (En 22 ???) En tentant de valider tous les cas et tous les chemins.
+	// En attendant : si l'action est la fin de location.href : ne pas faire la concaténation
+	if ((location.href.length < sAction.length) || (location.href.substr(location.href.length - sAction.length) !== sAction))
+	{
+		// On prend l'URL si on n'a pas d'action
+		sAction = location.href + sAction;
+	}
+	else
+	{
+		sAction = location.href;
+	}
+	// On vire l'ancre
+	var nAncreTaille = location.hash.length;
+	if (nAncreTaille > 0)
+	{
+		var nAncrePos = sAction.indexOf(location.hash);
+		sAction = sAction.substr(0, nAncrePos) + sAction.substr(nAncrePos + nAncreTaille);
+	}
+	return sAction;
+};
+
+clWDUtil.__sGetAction = function __sGetAction(oFormulaire)
+{
+	if (oFormulaire)
+	{
+		// GP 22/09/2016 : Le contenu de action n'est plus JAMAIS vide. Les navigateurs retournent donc une valeur valide lors de la lecture de Form.action.
+		return oFormulaire.action;
+	}
+	if (window.NSPCS)
+	{
+		var oDataPageAWPSansUI = NSPCS.NSUtil.ms_oDataPageAWPSansUI;
+		if (oDataPageAWPSansUI)
+		{
+			return oDataPageAWPSansUI.m_sURL;
+		}
+	}
+
+	return "";
+};
+
+// Recupere l'action d'une page
+// oPage : formulaire a utiliser (null possible)
+// bParamSuppr : indique s'il faut supprimer les parametres de l'URL
+// bIDSession : Indique s'il faut ajouter l'ID de session
+// bPourRepRes : Indique que la reference est avec le repertoire res et qu'il faut eviter les chemin relatifs
+clWDUtil.sGetPageAction = function sGetPageAction(oPage, bParamSuppr, bIDSession, bPourRepRes)
+{
+	// GP 22/09/2016 : Le contenu de action n'est plus JAMAIS vide. Les navigateurs retournent donc une valeur valide lors de la lecture de Form.action.
+	// Trouve la page si besoin
+	var sAction = this.__sGetAction(oPage || window._PAGE_);
+
+	// GP 21/11/2012 : Maintenant l'action vide contient "#" par compatibilité HTML5
+	// GP 30/11/2012 : QW227129 : Certains navigateur (Chrome) si ACTION contient uniquement "#", retourne l'URL de la page + "#"
+	if ("#" === sAction.charAt(sAction.length - 1))
+	{
+		sAction = sAction.substr(0, sAction.length - 1);
+	}
+	if ((sAction.length === 0) || (sAction.charAt(0) === "?"))
+	{
+		// Si l'action se retourve deja dans l'URL de la page, on ne la double pas
+		if (-1 !== location.href.indexOf(sAction))
+		{
+			sAction = this._sGetPageActionDepuisLocation("");
+		}
+		else
+		{
+			sAction = this._sGetPageActionDepuisLocation(sAction);
+		}
+	}
+	// GP 22/09/2016 : Le contenu de action n'est plus JAMAIS vide. Les navigateurs retournent donc une valeur valide lors de la lecture de Form.action.
+//	// Implicitement on a sAction > 0 (teste dans le premier if)
+//	// GP 04/12/2012 : Vu avec le site de ventre en ligne : il faut passer dans le test en IE10 mode quirks nouveau
+//	// GP 14/11/2013 : QW238935 : Ajoute le cas pour IE11
+//	// GP 25/08/2015 : TB94028 : Ajout de MS Edge qui a le même comportement que IE11 en HTML5
+//	else if (((bIEAvec11 || (nIE >= 8)) && !bIEQuirks9Max) || bEdge)
+//	{
+//		// En mode non quirks, IE retourne une addresse absolue pour FORM.action
+//		// Sauf que dans une page AWP l'action est vide. IE complete quand meme et retourne donc le chemin de la page
+//		// Evidement ce n'est pas une action valide au final
+//		var sActionAttribut = window._PAGE_.getAttributeNode("action").value;
+//		if ((0 === sActionAttribut.length) || ("?" === sActionAttribut.charAt(0)))
+//		{
+//			sAction = this._sGetPageActionDepuisLocation(sActionAttribut);
+//		}
+//	}
+
+	// Implicitement (sAction.length > 0) exclus le cas AWP. Il faut aussi exclure le cas .php
+	if (bPourRepRes && (sAction.indexOf("/") === -1) && (sAction.length > 0) && (sAction.toLowerCase().indexOf(".php") === -1))
+	{
+		sAction = "../" + sAction;
+	}
+
+	// Vire les parametres
+	if (bParamSuppr && (sAction.indexOf("?") !== -1))
+	{
+		sAction = sAction.substr(0, sAction.indexOf("?"));
+	}
+
+	// Ajoute l'ID de session si besoin
+	if (bIDSession)
+	{
+		if ((sAction.indexOf("AWPID=") === -1) && ("undefined" !== typeof _AWPID_A_))
+		{
+			// Ajoute le separateur et la session
+			var sID = (sAction.indexOf("?") !== -1) ? _AWPID_A_ : _AWPID_P_;
+			// Et s'il est vide prend le cookie de session s'il existe :
+			// Firefox et chrome qui en donnent pas leurs cookies au plugins (= Flash)
+			if ((bFF || bWK) && (sID.length === 0))
+			{
+				var tabSuffixe = [];
+				sID = clWDUtil.m_oCookie.GetCookie("AWP_CSESSION", tabSuffixe);
+				if (sID.length > 0)
+				{
+					sID = ((sAction.indexOf("?") !== -1) ? "&" : "?") + "AWPID" + tabSuffixe[0] + "=" + sID;
+				}
+			}
+			sAction += sID;
+		}
+		else if ("undefined" !== typeof _PHPID_)
+		{
+			var tabPHPID = _PHPID_.split("=");
+			if ((tabPHPID.length > 0) && (sAction.indexOf(tabPHPID[0] + "=") === -1))
+			{
+				// Ajoute le separateur et la session
+				sAction += ((sAction.indexOf("?") !== -1) ? "&" : "?") + _PHPID_;
+			}
+		}
+	}
+	// Renvoie la valeur
+	return sAction;
+};
+
+// GP 31/05/2013 : QW232516 : Correction sans prendre de risques.
+// Ce qu'il faut faire :
+// - Faire le point sur TOUS les appels de window._PAGE_.action (y compris dans le code généré par la JS)
+// - Faire passer ces codes par sGetPageAction
+//	- Gestion de l'ID de session par sGetPageAction
+//	- Gestion des paramètres par sGetPageAction (enplus de ceux existant de l'URL)
+// - Supprimer sGetPageActionIE10
+clWDUtil.sGetPageActionIE10 = function sGetPageActionIE10()
+{
+	// GP 22/09/2016 : Le contenu de action n'est plus JAMAIS vide. Les navigateurs retournent donc une valeur valide lors de la lecture de Form.action.
+	var sAction = this.__sGetAction(window._PAGE_);
+
+	// GP 25/08/2015 : TB94028 : Ajout de MS Edge qui a le même comportement que IE11 en HTML5
+	// GP 14/12/2017 : QW294663 : Maintenant le contenu de ACTION écrit sur le serveur est valide (paramètre ou nom valide de page), le contenu du action (au moins avec edge) est valide.
+	// (Corrigé dans WDxxxSession.exe le 21/10/2015 pour QW262788)
+//	if (((nIE >= 8) && !bIEQuirks9Max) || bEdge)
+	if ((nIE >= 8) && !bIEQuirks9Max)
+	{
+		// En mode non quirks, IE retourne une addresse absolue pour FORM.action
+		// Sauf que dans une page AWP l'action est vide. IE complete quand meme et retourne donc le chemin de la page
+		// Evidement ce n'est pas une action valide au final
+		var sActionAttribut = window._PAGE_.getAttributeNode("action").value;
+		if ((0 === sActionAttribut.length) || ("?" === sActionAttribut.charAt(0)))
+		{
+			sAction = this._sGetPageActionDepuisLocation(sActionAttribut);
+			// Vire les parametres
+			if (sAction.indexOf("?") !== -1)
+			{
+				sAction = sAction.substr(0, sAction.indexOf("?"));
+			}
+		}
+	}
+	return sAction;
+};
+
+// Retourne un type étendu : type JS ou type WL
+clWDUtil.oGetTypeEntendu = function oGetTypeEntendu(oValeur)
+{
+	var oType = typeof oValeur;
+	if (oType === "object")
+	{
+		// Par sécurité, force la conversion des valeurs du framework V2 vers le type natif
+		var iValeurBase;
+		if (window.NSPCS && (iValeurBase = NSPCS.iGetAsBase(oValeur)))
+		{
+			if (iValeurBase.veGetTypeWL)
+			{
+				return iValeurBase.veGetTypeWL();
+			}
+			// Pour garder le code simple : appel récursif
+			return oGetTypeEntendu(oValeur.valueOf());
+		}
+
+		if (window.clWLangage)
+		{
+			if (oValeur instanceof clWLangage.WDDateHeure)
+			{
+				if (oValeur.m_bDate && oValeur.m_bHeure)
+				{
+					// WLT_DATETIME
+					return 26;
+				}
+				else if (oValeur.m_bDate)
+				{
+					// WLT_DATEW
+					return 24;
+				}
+				else if (oValeur.m_bHeure)
+				{
+					// WLT_TIMEW
+					return 25;
+				}
+			}
+			else if (oValeur instanceof clWLangage.WDDuree)
+			{
+				// WLT_DUREE
+				return 27;
+			}
+			else if (oValeur instanceof clWLangage.WDUI8)
+			{
+				// WLT_UI8
+				return 5;
+			}
+			else if (oValeur instanceof clWLangage.WDI8)
+			{
+				// WLT_I8
+				return 9;
+			}
+			else if (oValeur instanceof clWLangage.WDNumerique)
+			{
+				// WLT_DECIMAL
+				return 13;
+			}
+			// Pas de test pour le UIX car ils sont strictement équivalent aux entiers signés sur 8.
+		}
+	}
+
+	return oType;
+};
+
+clWDUtil.oConversionType = (function ()
+{
+	"use strict";
+
+	function __toNumberI(oValeur)
+	{
+		// GP 17/04/2015 : QW257397 : (undefined).toString() ne fonctionne pas (ni (null).toString())
+		if ((undefined !== oValeur) && (null !== oValeur) && (oValeur.toNumber))
+		{
+			oValeur = oValeur.toNumber();
+		}
+		return parseInt(oValeur, 10);
+	}
+	function __toNumberF(oValeur)
+	{
+		// GP 17/04/2015 : QW257397 : (undefined).toString() ne fonctionne pas (ni (null).toString())
+		if ((undefined !== oValeur) && (null !== oValeur) && (oValeur.toNumber))
+		{
+			oValeur = oValeur.toNumber();
+		}
+		return parseFloat(oValeur);
+	}
+
+	// Conversion de type simple pour le WL
+	// Normalement le type droit est différent du type gauche (sinon on n'appel pas la fonction)
+	return function oConversionType(oValeur, nTypeGauche, oTypeGaucheEtendu, nTypeDroit, oTypeDroitEtendu)
+	{
+		// GP 18/11/2013 : QW234496 : Si le type droit est un "multitype"
+		// 140 = WLT_MULTI_TYPE
+		if (140 === nTypeDroit)
+		{
+			return oValeur.oGetValeur(nTypeGauche, oTypeGaucheEtendu);
+		}
+
+		// On ne gère que les types simples pour le moment
+		switch (nTypeGauche)
+		{
+		case 1: // WLT_BOOL
+			// Ce code est probablement buggé :
+			// false != 0				=> false	=> OK
+			// false != undefined		=> true		=> Pas OK
+			// false != null			=> true		=> Pas OK
+			// false != ""				=> false	=> OK
+			// false != []				=> false	=> OK (??)
+			// false != {}				=> true		=> Pas OK (??)
+			// Note : faire "!!x" n'est probablement pas mieux :
+			// !!0						=> false	=> OK
+			// !!undefined				=> false	=> OK
+			// !!null					=> false	=> OK
+			// !!""						=> false	=> OK
+			// !![]						=> true		=> Pas OK (??)
+			// !!{}						=> true		=> Pas OK (??)
+			return (typeof oValeur === "boolean") ? oValeur : (false != oValeur);
+		case 2: // WLT_UI1
+		case 3: // WLT_UI2
+		case 4: // WLT_UI4
+		case 6: // WLT_I1
+		case 7: // WLT_I2
+		case 8: // WLT_I4
+			switch (this.oGetTypeEntendu(oValeur))
+			{
+			case "number":
+				return oValeur;
+			case "boolean":
+				return oValeur ? 1 : 0;
+			case 5: // WLT_UI8
+			case 9: // WLT_I8
+			case 13: // WLT_DECIMAL
+			// oGetTypeEntendu retourne WLT_I8 pour WLT_UIX
+//		case 14: // WLT_UIX
+				return oValeur.toNumber();
+			case 24:
+			case 25:
+			case 26:
+				// WLT_DATEW (et WLT_DATEA que l'on ne manipule pas en JS), WLT_TIMEW (et WLT_TIMEA que l'on ne manipule pas en JS) et WLT_DATETIME
+				return oValeur.toNumber();
+			case 27:
+				// WLT_DUREE
+				return oValeur.m_nValeur;
+			default:
+				oValeur = __toNumberI(oValeur);
+				return isNaN(oValeur) ? 0 : oValeur;
+			}
+		case 11: // WLT_R4
+		case 12: // WLT_R8
+			switch (this.oGetTypeEntendu(oValeur))
+			{
+			case "number":
+				return oValeur;
+			case 5: // WLT_UI8
+			case 9: // WLT_I8
+			case 13: // WLT_DECIMAL
+			// oGetTypeEntendu retourne WLT_I8 pour WLT_UIX
+//			case 14: // WLT_UIX
+				return oValeur.toNumber();
+			case "boolean":
+				return oValeur ? 1 : 0;
+			default:
+				oValeur = __toNumberF(oValeur);
+				return isNaN(oValeur) ? 0 : oValeur;
+			}
+		case 10: // WLT_CY
+			// GP 05/10/2015 : On peux recevoir WLT_CY dans les chemins qui n'utilisent pas encore __rclGetTypeCommunPourExecution
+			clWDUtil.WDDebug.assert(false, "WLT_CY non filtré");
+			// falls through
+		case 5: // WLT_UI8
+		case 9: // WLT_I8
+		case 13: // WLT_DECIMAL
+		case 14: // WLT_UIX
+			// Ici techniquement, dans le cas d'un numérique, il manque la description de la précision de la déclaration du type
+			return this.__oConversionTypeNumerique(oValeur, nTypeGauche, oTypeGaucheEtendu, nTypeDroit, oTypeDroitEtendu);
+//		case 15: // WLT_HWND
+		case 16: // WLT_DSTRW
+//		case 17: // WLT_CARA	On ne recoit plus cette valeur (filtrée par __rclGetTypeCommunPourExecution)
+		case 18: // WLT_PSTRA
+		case 19: // WLT_DSTRA
+//		case 20: // WLT_SQLQUERYW
+//		case 21: // WLT_PASCAL	On ne recoit plus cette valeur (filtrée par __rclGetTypeCommunPourExecution)
+//		case 22: // WLT_FIXE	On ne recoit plus cette valeur (filtrée par __rclGetTypeCommunPourExecution)
+//		case 23: // WLT_ASCIIZ	On ne recoit plus cette valeur (filtrée par __rclGetTypeCommunPourExecution)
+//		case 81: // WLT_CARW	On ne recoit plus cette valeur (filtrée par __rclGetTypeCommunPourExecution)
+		case 110: // WLT_PSTRW !!!
+			switch (typeof oValeur)
+			{
+			case "string":
+				return oValeur;
+			case "boolean":
+				return oValeur ? "1" : "0";
+			default:
+				// GP 06/01/2017 : Appel simple de "String(xxx)". Remplace les corrections de :
+				// - QW256479 : xxx + "" interdit : les exceptions ne traversent pas l'appel implicite de toString() en quirks + HTML4
+				// - QW257397 : (xxx).toString() interdit : ne fonctionne pas undefined
+				// String(xxx) transmet les exceptions et fonctionne avec undefined
+				return String(oValeur);
+			}
+		case 24: // WLT_DATEW
+		case 128: // WLT_DATEA
+			return this.__oConversionTypeDateHeure(true, false, oValeur, nTypeDroit, oTypeDroitEtendu);
+		case 25: // WLT_TIMEW
+		case 129: // WLT_TIMEA
+			return this.__oConversionTypeDateHeure(false, true, oValeur, nTypeDroit, oTypeDroitEtendu);
+		case 26: // WLT_DATETIME
+			return this.__oConversionTypeDateHeure(true, true, oValeur, nTypeDroit, oTypeDroitEtendu);
+		case 27: // WLT_DUREE
+			// Si on n'a pas de type Date en WL, on a un risque de ne pas avoir clWLangage. Dans ce cas on fait comme avant on retourne la valeur inchangée (sous forme d'une chaine)
+			if (window.clWLangage)
+			{
+				return new clWLangage.WDDuree(oValeur);
+			}
+			return oValeur;
+//		case 28: // WLT_BIN
+//		case 29: // WLT_BUFFER
+//		case 30: // WLT_MEMOIMG
+//		case 31: // WLT_ANY
+//		case 32: // WLT_AUT
+//		case 33: // WLT_OLE
+//		case 34: // WLT_ARR
+//			return clWDUtil.__oConversionTypeTableau(oValeur, nTypeGauche, oTypeGaucheEtendu, nTypeDroit, oTypeDroitEtendu)
+//		case 35: // WLT_COMPOSE
+//		case 36: // WLT_STRUCT
+//		case 37: // WLT_OBJ
+//			// On ne sait pas convertir (et si ce n'est pas un DINO on a eu une erreur en WL)
+//			return oValeur;
+//		case 38: // WLT_ELEM
+//		case 39: // WLT_WINNAME
+//		case 40: // WLT_REPORT
+//		case 41: // WLT_WIN
+//		case 42: // WLT_IWIN
+//		case 43: // WLT_WINCTRL
+//		case 44: // WLT_IWINCTRL
+//		case 45: // WLT_CTRL
+//		case 46: // WLT_ICTRL
+//		case 47: // WLT_HFFILE
+//		case 48: // WLT_QUERY
+//		case 49: // WLT_HFFIELD
+//		case 50: // WLT_PARAM
+//			// On ne sait pas convertir (et si ce n'est pas un DINO on a eu une erreur en WL)
+//			return oValeur;
+//		case 51: // WLT_INTERNE_1
+//		case 52: // WLT_INTERNE_2
+//		case 53: // WLT_DESCFILE
+//		case 54: // WLT_DESCITEM
+//		case 55: // WLT_DESCLINK
+//		case 56: // WLT_HFLINK
+//		case 57: // WLT_IOBJACODE
+//		case 58: // WLT_DSTRX_ARR
+//		case 59: // WLT_PROCSTOCK
+//		case 60: // WLT_TYPE_DESC
+//		case 61: // WLT_OBJET_PROC
+//		case 62: // WLT_ASSOC
+//			// On ne sait pas convertir (et si ce n'est pas un DINO on a eu une erreur en WL)
+//			return oValeur;
+//		case 63: // WLT_REPNAME
+//		case 64: // WLT_INT_ARR
+//		case 65: // WLT_POLICE
+//		case 66: // WLT_HDC
+//		case 67: // WLT_PROCNAME
+//		case 68: // WLT_WINPROCNAME
+//		case 69: // WLT_CONNEXION
+//		case 70: // WLT_DESCCONNEXION
+//		case 71: // WLT_VARIANTOLE
+//		case 72: // WLT_OBJET_NET
+//		case 73: // WLT_ANY_OBJET
+//			// On ne sait pas convertir (et si ce n'est pas un DINO on a eu une erreur en WL)
+//			return oValeur;
+//		case 74: // WLT_NIVEAU_PILE
+//		case 75: // WLT_UDSTR
+//		case 76: // WLT_STRBIN
+//		case 77: // WLT_AUB_STR
+//		case 78: // WLT_AB_STR
+//		case 79: // WLT_UB_STR
+//		case 80: // WLT_AU_STR
+//		case 82: // WLT_ANY_ARR
+//		case 83: // WLT_TABANY
+//		case 84: // WLT_CS_ELEM
+//		case 85: // WLT_NOM_COMPOSANT
+//		case 86: // WLT_AU_STR_ID
+//		case 87: // WLT_ETENDU
+//		case 88: // WLT_VARIABLE
+//		case 89: // WLT_VAR_XSTR
+//		case 90: // WLT_HORS_CONFIG
+//		case 91: // WLT_IWINNAME
+//		case 92: // WLT_QUESTION
+//		case 93: // WLT_TYPESTRUCT
+//		case 94: // WLT_TYPEBUFFER
+//		case 95: // WLT_PROCNAME_ANY
+//		case 96: // WLT_VARIABLE_VM
+//		case 97: // WLT_ELEM_PILE
+//		case 98: // WLT_PROCAJAX
+//		case 99: // WLT_AUB_STR_ID
+//		case 100: // WLT_VARTAB
+//		case 101: // WLT_TESTNAME
+//		case 102: // WLT_PAGENAME
+//		case 103: // WLT_ARR_ASSOC
+//		case 104: // WLT_UIX_SOUPLE
+//		case 105: // WLT_TRIGGER_HF
+//		case 106: // WLT_GROUPE_HF
+//		case 107: // WLT_OBJET_JS
+//			// On ne sait pas convertir (et si ce n'est pas un DINO on a eu une erreur en WL)
+//			return oValeur;
+//		case 108: // WLT_OBJET_BASE
+//		case 109: // WLT_ACCES_DINO
+		case 111: // WLT_DINO
+			// Si on a un type : effectue une instanciation : oTypeGaucheEtendu est un pointeur sur le constructeur
+			if (oTypeGaucheEtendu)
+			{
+				return new oTypeGaucheEtendu(oValeur);
+			}
+			// Sinon on ne sait pas convertir
+			return oValeur;
+//		case 112: // WLT_TABLEAU
+//		case 113: // WLT_CONTENEUR
+//		case 114: // WLT_PLANACTIONNAME
+//		case 115: // WLT_SUBREPNAME
+//		case 116: // WLT_SOURCENAME
+//		case 117: // WLT_COLLSTOCK
+//		case 118: // WLT_REQSTOCK
+//		case 119: // WLT_GENOBJ
+//		case 120: // WLT_ACTIONNAME
+//		case 121: // WLT_DSTRW_LATIN
+//		case 122: // WLT_PSTRW_LATIN
+//		case 123: // WLT_IJAUGE
+//		case 124: // WLT_INTERFACE
+//		case 125: // WLT_AUB_STR_ARR
+//		case 126: // WLT_DSTRW_ACP
+//		case 127: // WLT_PSTRW_ACP
+//		case 130: // WLT_DSTRW_CUR
+//		case 131: // WLT_PSTRW_CUR
+//		case 132: // WLT_ENTONNOIR
+//		case 133: // WLT_IDINO
+//		case 134: // WLT_SQLQUERYA
+//		case 135: // WLT_ENUMERATION
+//		case 136: // WLT_COMBINAISON
+//		case 137: // WLT_OBJET_WINRT
+//		case 138: // WLT_TYPE_CHAMP
+//		case 139: // WLT_MULTI_VALEUR
+//		case 140: // WLT_MULTI_TYPE
+//		case 141: // WLT_APPEL_PROC
+//		case 142: // WLT_TABLEAU_ANY
+//		case 143: // WLT_OBJET_ANY
+
+		default:
+			// @@@ Erreur WL : Type non géré
+			return oValeur;
+		}
+	};
+})();
+clWDUtil.__oConversionTypeDateHeure = function __oConversionTypeDateHeure(bDate, bHeure, oValeur, nTypeDroit/*, oTypeDroitEtendu*/)
+{
+	// Si on n'a pas de type Date en WL, on a un risque de ne pas avoir clWLangage. Dans ce cas on fait comme avant on retourne la valeur inchangée (sous forme d'une chaine)
+	if (window.clWLangage)
+	{
+		// GP 16/03/2015 : TB91216/TB91683 : Accepte pas les date/heure/dateheure invalides : uniquement si on viens d'une autre date/heure (pour les date/heure invalide venu du serveur)
+		var bAccepteInvalide;
+		switch (nTypeDroit)
+		{
+		case 24: // WLT_DATEW
+		case 128: // WLT_DATEA
+		case 25: // WLT_TIMEW
+		case 129: // WLT_TIMEA
+		case 26: // WLT_DATETIME
+			bAccepteInvalide = true;
+			break;
+		default:
+			bAccepteInvalide = false;
+			break;
+		}
+		return new clWLangage.WDDateHeure(bDate, bHeure, oValeur, undefined, bAccepteInvalide);
+	}
+	else
+	{
+		// GP 26/03/2015 : QW256551 : Bien sur il faut un return ici
+		return oValeur;
+	}
+};
+clWDUtil.__oConversionTypeNumerique = function __oConversionTypeNumerique(oValeur, nTypeGauche, oTypeGaucheEtendu, nTypeDroit, oTypeDroitEtendu)
+{
+	// Si on n'a pas de type Numérique en WL, on a un risque de ne pas avoir clWLangage. Dans ce cas on fait comme avant on retourne la valeur inchangée
+	if (window.clWLangage)
+	{
+		switch (nTypeGauche)
+		{
+		case 5: // WLT_UI8
+			return new clWLangage.WDUI8(oValeur);
+		case 9: // WLT_I8
+			return new clWLangage.WDI8(oValeur);
+		case 13: // WLT_DECIMAL
+			// GP 05/10/2015 : QW262677 : Pour le cas ou l'on ne recoit pas le paramètre (par exemple par WDTableColonne.prototype._voGetValeurDefaut) <= a corriger un jour
+			clWDUtil.WDDebug.assert(undefined !== oTypeGaucheEtendu, "oTypeGaucheEtendu non renseigné");
+			oTypeGaucheEtendu = oTypeGaucheEtendu || [0, 0];
+			return new clWLangage.WDNumerique(oValeur, oTypeGaucheEtendu[0], oTypeGaucheEtendu[1]);
+		case 14: // WLT_UIX
+			return new clWLangage.WDI8(oValeur);
+		default:
+			clWDUtil.WDDebug.assert(false, "Type invalide");
+			break;
+		}
+	}
+	// GP 20/01/2016 : TB96142 : Pour faire comme avant il faut retourner un "nombre"
+	switch (nTypeGauche)
+	{
+	case 5: // WLT_UI8
+		// 4 = WLT_UI4
+		return this.oConversionType(oValeur, 4, undefined, nTypeDroit, oTypeDroitEtendu);
+	case 9: // WLT_I8
+	case 14: // WLT_UIX
+		// 8 = WLT_I4
+		return this.oConversionType(oValeur, 8, undefined, nTypeDroit, oTypeDroitEtendu);
+	default:
+		clWDUtil.WDDebug.assert(false, "Type invalide");
+		// falls through
+	case 13: // WLT_DECIMAL
+		// 12 = WLT_R8
+		return this.oConversionType(oValeur, 12, undefined, nTypeDroit, oTypeDroitEtendu);
+	}
+};
+
+//// Conversion d'un tableau
+//clWDUtil.__oConversionTypeTableau = function __oConversionTypeTableau(oTableau/*, nTypeGauche*//*, oTypeGaucheEtendu*//*, nTypeDroit*//*, oTypeDroitEtendu*/)
+//{
+//	// GP 15/01/2013 : Ne fait rien sur les tableaux car :
+//	// - On fait trop de copies (y compris sur des opérateurs)
+//	// - On détecte mal les tableaux d'objets (il ne faut pas faire la conversion des objets) mais il faut faire la conversion des sous tableaux
+//	return oTableau;
+////	// Seulement si l'élément est un tableau (sinon on a une erreur WL en WL)
+////	// On n'utilise pas clWDTableau.__bEstTableau pour ne pas avoir de dépendance
+////	if ("object" === typeof oTableau)
+////	{
+////		var i;
+////		var nLimiteI = oTableau.length;
+////		var oTableauConv = [];
+////		for (i = 0; i < nLimiteI; i++)
+////		{
+////			// Pour fonctionner sur un tableau a plusieurs dimensions
+////			var oValeur = oTableau[i];
+////			if ("object" === typeof oValeur)
+////			{
+////				// On teste le fait que le sous tableau a une longeur pour détecter les objets et les tableaux
+////				if (oValeur.length)
+////				{
+////					// Conversion d'un sous tableau
+////					oTableauConv[i] = this.oConversionType(oValeur, nTypeGauche, oTypeGaucheEtendu, nTypeDroit, oTypeDroitEtendu);
+////				}
+////				else
+////				{
+////					oTableauConv[i] = oValeur;
+////				}
+////			}
+////			else
+////			{
+////				// Conversion d'un élément
+////				oTableauConv[i] = this.oConversionType(oTableau[i], oTypeGaucheEtendu, undefined, oTypeDroitEtendu, undefined);
+////			}
+////		}
+////	}
+////	else
+////	{
+////		// @@@ Erreur WL : La source n'est pas un tableau
+////		return oTableau;
+////	}
+//};
+
+//////////////////////////////////////////////////////////////////////////
+// Opérations mathématiques
+
+// Addition
+clWDUtil.oAddition = function oAddition(oValeur1, oValeur2)
+{
+	// Les cas autorisés sont les suivants :
+	// Date + Durée => Date
+	// Heure + Durée => Heure
+	// DateHeure + Durée => DateHeure
+	// Durée + Date => Date
+	// Durée + Heure => Heure
+	// Durée + Dateheure => DateHeure
+	// Durée + Durée => Durée
+	// Durée + Entier => Durée
+	// Entier + Durée => Durée
+
+	// Dans une opération qui implique un numérique et un nombre, le format de l'opération est en numerique
+
+	var oTypeValeur1 = this.oGetTypeEntendu(oValeur1);
+	var oTypeValeur2 = this.oGetTypeEntendu(oValeur2);
+	switch (oTypeValeur1)
+	{
+	case 24:
+	case 25:
+	case 26:
+		// WLT_DATEW (et WLT_DATEA que l'on ne manipule pas en JS), WLT_TIMEW (et WLT_TIMEA que l'on ne manipule pas en JS) et WLT_DATETIME
+		// On ne filtre pas si le type correspond exactement déjà fait en WL (et sinon tant pis)
+		switch (oTypeValeur2)
+		{
+		case 27:
+			return oValeur1.oAdditionDuree(oValeur2);
+		}
+		// Autre cas : addition sous forme de chaine
+		// GP 27/03/2015 : Les exceptions ne traversent pas l'appel implicite de toString() en quirks + HTML4
+		// => La première valeur est un WDDateHeure et la seconde valeur peut être un WDDateHeure
+		oValeur1 = oValeur1.toString();
+		oValeur2 = String(oValeur2);
+		break;
+	case 27:
+		// WLT_DUREE
+		switch (oTypeValeur2)
+		{
+		case 24:
+		case 25:
+		case 26:
+			// WLT_DATEW (et WLT_DATEA que l'on ne manipule pas en JS), WLT_TIMEW (et WLT_TIMEA que l'on ne manipule pas en JS) et WLT_DATETIME
+			// Inverse les opérandes (l'addition est commutative)
+			return oValeur2.oAdditionDuree(oValeur1);
+		case 27:
+			// WLT_DUREE
+			return oValeur1.oAdditionDuree(oValeur2);
+		case 5: // WLT_UI8
+		case 9: // WLT_I8
+		case 13: // WLT_DECIMAL
+		// oGetTypeEntendu retourne WLT_I8 pour WLT_UIX
+//		case 14: // WLT_UIX
+			if (oValeur2.bEstEntier())
+			{
+				return oValeur1.oAdditionEntier(oValeur2.toNumber());
+			}
+			break;
+		case "number":
+			if (oValeur2 === (oValeur2 | 0))
+			{
+				return oValeur1.oAdditionEntier(oValeur2);
+			}
+			break;
+		}
+		// Autre cas : addition sous forme de chaine
+		// GP 27/03/2015 : Les exceptions ne traversent pas l'appel implicite de toString() en quirks + HTML4
+		// => Inutile : aucune des deux valeur n'est un WDDateHeure
+		break;
+	case 5: // WLT_UI8
+	case 9: // WLT_I8
+	case 13: // WLT_DECIMAL
+	// oGetTypeEntendu retourne WLT_I8 pour WLT_UIX
+//	case 14: // WLT_UIX
+		switch (oTypeValeur2)
+		{
+		case 27:
+			// WLT_DUREE
+			// Inverse les opérandes (l'addition est commutative)
+			if (oValeur1.bEstEntier())
+			{
+				return oValeur2.oAdditionEntier(oValeur1.toNumber());
+			}
+			break;
+		case "number":
+			// Dans une opération qui implique un numérique et un nombre, le format de l'opération est en numerique
+			// GP 28/09/2015 : QW262321 : [0, 0] : Précision automatique
+			oValeur2 = clWDUtil.__oConversionTypeNumerique(oValeur2, oTypeValeur1, [0, 0]);
+			// falls through
+		case 5: // WLT_UI8
+		case 9: // WLT_I8
+		case 13: // WLT_DECIMAL
+		// oGetTypeEntendu retourne WLT_I8 pour WLT_UIX
+//		case 14: // WLT_UIX
+			return oValeur1.oAdditionNumerique(oValeur2);
+		default:
+			oValeur1 = oValeur1.toString();
+			oValeur2 = String(oValeur2);
+			break;
+		}
+		// Autre cas : simple addition avec le comportement par défaut.
+		break;
+	case "number":
+		switch (oTypeValeur2)
+		{
+		case 5: // WLT_UI8
+		case 9: // WLT_I8
+		case 13: // WLT_DECIMAL
+		// oGetTypeEntendu retourne WLT_I8 pour WLT_UIX
+//		case 14: // WLT_UIX
+			// Dans une opération qui implique un numérique et un nombre, le format de l'opération est en numerique
+			// GP 28/09/2015 : QW262321 : [0, 0] : Précision automatique
+			return clWDUtil.__oConversionTypeNumerique(oValeur1, oTypeValeur2, [0, 0]).oAdditionNumerique(oValeur2);
+		case 27:
+			// WLT_DUREE
+			// Inverse les opérandes (l'addition est commutative)
+			if (oValeur1 === (oValeur1 | 0))
+			{
+				return oValeur2.oAdditionEntier(oValeur1);
+			}
+			break;
+		}
+		// Autre cas : simple addition avec le comportement par défaut.
+		// GP 31/03/2015 : QW256806 : On ne force pas la conversion en chaine car sinon la somme de deux entiers devient une concaténation
+		// Et aussi : entier + date/dateheure/heure est interdit en WL
+		break;
+	}
+
+	// GP 27/03/2015 :
+	return oValeur1 + oValeur2;
+};
+
+// Soustraction
+clWDUtil.oSoustraction = function oSoustraction(oValeur1, oValeur2)
+{
+	// Les cas autorisés sont les suivants :
+	// Date - Date => Durée
+	// Date - Durée => Date
+	// Heure - Heure => Durée
+	// Heure - Durée => Heure
+	// DateHeure - DateHeure => Durée
+	// DateHeure - Durée => DateHeure
+	// Durée - Durée => Durée
+
+	// Dans une opération qui implique un numérique et un nombre, le format de l'opération est en numerique
+
+	var oTypeValeur1 = this.oGetTypeEntendu(oValeur1);
+	var oTypeValeur2 = this.oGetTypeEntendu(oValeur2);
+	switch (oTypeValeur1)
+	{
+	case 24:
+	case 25:
+	case 26:
+		// WLT_DATEW (et WLT_DATEA que l'on ne manipule pas en JS), WLT_TIMEW (et WLT_TIMEA que l'on ne manipule pas en JS) et WLT_DATETIME
+		// On ne filtre pas si le type correspond exactement déjà fait en WL (et sinon tant pis)
+		switch (oTypeValeur2)
+		{
+		case 24:
+		case 25:
+		case 26:
+			// WLT_DATEW (et WLT_DATEA que l'on ne manipule pas en JS), WLT_TIMEW (et WLT_TIMEA que l'on ne manipule pas en JS) et WLT_DATETIME
+			return oValeur1.oSoustractionDate(oValeur2);
+		case 27:
+			// WLT_DUREE
+			return oValeur1.oSoustractionDuree(oValeur2);
+		}
+		// Autre cas : erreur en WL serveur
+		oValeur1 = oValeur1.toString();
+		oValeur2 = String(oValeur2);
+		break;
+	case 27:
+		// WLT_DUREE
+		// Les cas autorisés sont les suivants :
+		switch (oTypeValeur2)
+		{
+		case 27:
+			// WLT_DUREE => DateHeure - Durée => DateHeure
+			return oValeur1.oSoustractionDuree(oValeur2);
+		}
+		// Autre cas : erreur en WL serveur
+		oValeur1 = oValeur1.toString();
+		oValeur2 = String(oValeur2);
+		break;
+
+	case 5: // WLT_UI8
+	case 9: // WLT_I8
+	case 13: // WLT_DECIMAL
+	// oGetTypeEntendu retourne WLT_I8 pour WLT_UIX
+//	case 14: // WLT_UIX
+		switch (oTypeValeur2)
+		{
+		case "number":
+			// Dans une opération qui implique un numérique et un nombre, le format de l'opération est en numerique
+			// GP 28/09/2015 : QW262321 : [0, 0] : Précision automatique
+			oValeur2 = clWDUtil.__oConversionTypeNumerique(oValeur2, oTypeValeur1, [0, 0]);
+			// falls through
+		case 5: // WLT_UI8
+		case 9: // WLT_I8
+		case 13: // WLT_DECIMAL
+		// oGetTypeEntendu retourne WLT_I8 pour WLT_UIX
+//		case 14: // WLT_UIX
+			return oValeur1.oSoustractionNumerique(oValeur2);
+		default:
+			oValeur1 = oValeur1.toString();
+			oValeur2 = String(oValeur2);
+			break;
+		}
+		// Autre cas : simple soustraction avec le comportement par défaut.
+		break;
+	case "number":
+		switch (oTypeValeur2)
+		{
+		case 5: // WLT_UI8
+		case 9: // WLT_I8
+		case 13: // WLT_DECIMAL
+		// oGetTypeEntendu retourne WLT_I8 pour WLT_UIX
+//		case 14: // WLT_UIX
+			// Dans une opération qui implique un numérique et un nombre, le format de l'opération est en numerique
+			// GP 28/09/2015 : QW262321 : [0, 0] : Précision automatique
+			return clWDUtil.__oConversionTypeNumerique(oValeur1, oTypeValeur2, [0, 0]).oSoustractionNumerique(oValeur2);
+		}
+		// Autre cas : simple soustraction avec le comportement par défaut.
+		break;
+	}
+
+	return oValeur1 - oValeur2;
+};
+
+// Multiplication
+clWDUtil.oMultiplication = function oMultiplication(oValeur1, oValeur2)
+{
+	// Les cas autorisés sont les suivants :
+	// Durée * Nombre(Entier/Réel) => Durée
+	// Nombre(Entier/Réel) * Durée => Durée
+
+	var oTypeValeur1 = this.oGetTypeEntendu(oValeur1);
+	var oTypeValeur2 = this.oGetTypeEntendu(oValeur2);
+	switch (oTypeValeur1)
+	{
+	case 27:
+		// WLT_DUREE
+		switch (oTypeValeur2)
+		{
+		case 5: // WLT_UI8
+		case 9: // WLT_I8
+		case 13: // WLT_DECIMAL
+		// oGetTypeEntendu retourne WLT_I8 pour WLT_UIX
+//		case 14: // WLT_UIX
+			return oValeur1.oMultiplicationNombre(oValeur2.toNumber());
+		case "number":
+			return oValeur1.oMultiplicationNombre(oValeur2);
+		}
+		// Autre cas : multiplication sous forme de chaine
+		break;
+	case 5: // WLT_UI8
+	case 9: // WLT_I8
+	case 13: // WLT_DECIMAL
+	// oGetTypeEntendu retourne WLT_I8 pour WLT_UIX
+//	case 14: // WLT_UIX
+		switch (oTypeValeur2)
+		{
+		case 27:
+			// WLT_DUREE
+			// Inverse les opérandes (la multiplication est commutative)
+			return oValeur2.oMultiplicationNombre(oValeur1.toNumber());
+		case "number":
+			// Dans une opération qui implique un numérique et un nombre, le format de l'opération est en numerique
+			// GP 28/09/2015 : QW262321 : [0, 0] : Précision automatique
+			oValeur2 = clWDUtil.__oConversionTypeNumerique(oValeur2, oTypeValeur1, [0, 0]);
+			// falls through
+		case 5: // WLT_UI8
+		case 9: // WLT_I8
+		case 13: // WLT_DECIMAL
+		// oGetTypeEntendu retourne WLT_I8 pour WLT_UIX
+//		case 14: // WLT_UIX
+			return oValeur1.oMultiplicationNumerique(oValeur2);
+		default:
+			oValeur1 = oValeur1.toString();
+			oValeur2 = String(oValeur2);
+			break;
+		}
+		// Autre cas : multiplication sous forme de chaine
+		break;
+	case "number":
+		switch (oTypeValeur2)
+		{
+		case 27:
+			// WLT_DUREE
+			// Inverse les opérandes (la multiplication est commutative)
+			return oValeur2.oMultiplicationNombre(oValeur1);
+		case 5: // WLT_UI8
+		case 9: // WLT_I8
+		case 13: // WLT_DECIMAL
+		// oGetTypeEntendu retourne WLT_I8 pour WLT_UIX
+//		case 14: // WLT_UIX
+			// Dans une opération qui implique un numérique et un nombre, le format de l'opération est en numerique
+			// GP 28/09/2015 : QW262321 : [0, 0] : Précision automatique
+			return clWDUtil.__oConversionTypeNumerique(oValeur1, oTypeValeur2, [0, 0]).oMultiplicationNumerique(oValeur2);
+		}
+		// Autre cas : multiplication sous forme de chaine
+		break;
+	}
+
+	return oValeur1 * oValeur2;
+};
+
+// Division
+clWDUtil.oDivision = function oDivision(oValeur1, oValeur2)
+{
+	// Les cas autorisés sont les suivants :
+	// Durée / Durée => Réel
+	// Durée / Nombre(Entier/Réel) => Durée
+
+	var oTypeValeur1 = this.oGetTypeEntendu(oValeur1);
+	var oTypeValeur2 = this.oGetTypeEntendu(oValeur2);
+	switch (oTypeValeur1)
+	{
+	case 27:
+		// WLT_DUREE
+		switch (oTypeValeur2)
+		{
+		case 27:
+			// WLT_DUREE
+			return oValeur1.fDivisionDuree(oValeur2);
+		case 5: // WLT_UI8
+		case 9: // WLT_I8
+		case 13: // WLT_DECIMAL
+		// oGetTypeEntendu retourne WLT_I8 pour WLT_UIX
+//		case 14: // WLT_UIX
+			return oValeur1.oDivisionNombre(oValeur2.toNumber());
+		case "number":
+			return oValeur1.oDivisionNombre(oValeur2);
+		}
+		// Autre cas : division sous forme de chaine
+		break;
+	case 5: // WLT_UI8
+	case 9: // WLT_I8
+	case 13: // WLT_DECIMAL
+	// oGetTypeEntendu retourne WLT_I8 pour WLT_UIX
+//	case 14: // WLT_UIX
+		switch (oTypeValeur2)
+		{
+		case "number":
+			// Dans une opération qui implique un numérique et un nombre, le format de l'opération est en numerique
+			// GP 28/09/2015 : QW262321 : [0, 0] : Précision automatique
+			oValeur2 = clWDUtil.__oConversionTypeNumerique(oValeur2, oTypeValeur1, [0, 0]);
+			// falls through
+		case 5: // WLT_UI8
+		case 9: // WLT_I8
+		case 13: // WLT_DECIMAL
+		// oGetTypeEntendu retourne WLT_I8 pour WLT_UIX
+//		case 14: // WLT_UIX
+			return oValeur1.xoDivisionNumerique(oValeur2);
+		default:
+			oValeur1 = oValeur1.toString();
+			oValeur2 = String(oValeur2);
+			break;
+		}
+		// Autre cas : division sous forme de chaine
+		break;
+	case "number":
+		switch (oTypeValeur2)
+		{
+		case 5: // WLT_UI8
+		case 9: // WLT_I8
+		case 13: // WLT_DECIMAL
+		// oGetTypeEntendu retourne WLT_I8 pour WLT_UIX
+//		case 14: // WLT_UIX
+			// Dans une opération qui implique un numérique et un nombre, le format de l'opération est en numerique
+			// GP 28/09/2015 : QW262321 : [0, 0] : Précision automatique
+			return clWDUtil.__oConversionTypeNumerique(oValeur1, oTypeValeur2, [0, 0]).xoDivisionNumerique(oValeur2);
+		}
+		// Autre cas : multiplication sous forme de chaine
+		break;
+	}
+
+	return oValeur1 / oValeur2;
+};
+
+// Modulo
+clWDUtil.oModulo = function oModulo(oValeur1, oValeur2)
+{
+	var oTypeValeur1 = this.oGetTypeEntendu(oValeur1);
+	var oTypeValeur2 = this.oGetTypeEntendu(oValeur2);
+	switch (oTypeValeur1)
+	{
+	case 5: // WLT_UI8
+	case 9: // WLT_I8
+	case 13: // WLT_DECIMAL
+	// oGetTypeEntendu retourne WLT_I8 pour WLT_UIX
+//	case 14: // WLT_UIX
+		switch (oTypeValeur2)
+		{
+		case "number":
+			// Dans une opération qui implique un numérique et un nombre, le format de l'opération est en numerique
+			// GP 28/09/2015 : QW262321 : [0, 0] : Précision automatique
+			oValeur2 = clWDUtil.__oConversionTypeNumerique(oValeur2, oTypeValeur1, [0, 0]);
+			// falls through
+		case 5: // WLT_UI8
+		case 9: // WLT_I8
+		case 13: // WLT_DECIMAL
+		// oGetTypeEntendu retourne WLT_I8 pour WLT_UIX
+//		case 14: // WLT_UIX
+			return oValeur1.xoModuloNumerique(oValeur2);
+		default:
+			oValeur1 = oValeur1.toString();
+			oValeur2 = String(oValeur2);
+			break;
+		}
+		// Autre cas : division sous forme de chaine
+		break;
+	case "number":
+		switch (oTypeValeur2)
+		{
+		case 5: // WLT_UI8
+		case 9: // WLT_I8
+		case 13: // WLT_DECIMAL
+		// oGetTypeEntendu retourne WLT_I8 pour WLT_UIX
+//		case 14: // WLT_UIX
+			// Dans une opération qui implique un numérique et un nombre, le format de l'opération est en numerique
+			// GP 28/09/2015 : QW262321 : [0, 0] : Précision automatique
+			return clWDUtil.__oConversionTypeNumerique(oValeur1, oTypeValeur2, [0, 0]).xoModuloNumerique(oValeur2);
+		}
+		// Autre cas : multiplication sous forme de chaine
+		break;
+	}
+
+	return oValeur1 % oValeur2;
+};
+
+//////////////////////////////////////////////////////////////////////////
+// Opérations diverses (par ordre alphabétiques)
+
+(function ()
+{
+	"use strict";
+
+	// Objets avec les fonctions selon que la valeur est un numérique ou autre chose
+	var ms_oOperations =
+	{
+		oAbsolue: function oAbsolue(oValeur) { return Math.abs(oValeur); },
+		oArrondi: function oArrondi(oValeur, nPrecision)
+		{
+			// Math.round fait l'arrondi de -1.5 en -1 alors que l'arrondi du WL serveur fait :
+			// -1.9 => -2, -1.5 => -2, -1.1 => -1, 1.1 => 1, 1.5 => 2, 1.9 => 2
+			var nFacteur = (oValeur < 0) ? -1 : 1;
+
+			// On deplace dans la partie entiere les decimales a conserver
+			// On coupe la partie decimale restante
+			// On redecale les decimales stockees auparavant
+			var nDecalage = Math.pow(10, nPrecision) * nFacteur;
+			return Math.round(oValeur * nDecalage) / nDecalage;
+		},
+		// Si la valeur est négative, Math.floor va vers le bas au lieu de vers le haut
+		nArrondiVersZero: function nArrondiVersZero(oValeur) { return ((0 <= oValeur) ? Math.floor : Math.ceil)(oValeur); },
+		bEstNegatif: function bEstNegatif(oValeur) { return oValeur < 0; },
+//		bEstPair: function bEstPair(oValeur) { return 0 === (oValeur % 2); },
+		bEstPair: function bEstPair(oValeur) { return 0 === (oValeur & 0x1); },
+		nLog10Arrondi: function nLog10Arrondi(oValeur) { return Math.floor(Math.log(oValeur) / Math.LN10); },
+		oPartieEntiere: function oPartieEntiere(oValeur) { return Math.floor(oValeur); },
+		oArrondiInferieur : function oArrondiInferieur(oValeur, nPrecision)
+		{
+			var nDecalage = nPrecision === undefined ? 1 : Math.pow(10, nPrecision);
+			return Math.floor(oValeur * nDecalage) / nDecalage;
+		},
+		oArrondiSuperieur : function oArrondiSuperieur(oValeur,nPrecision)
+		{
+			var nDecalage = nPrecision === undefined ? 1 : Math.pow(10, nPrecision);
+			return Math.ceil(oValeur * nDecalage)/ nDecalage;
+		}
+	};
+	var ms_oOperationsNumeriques =
+	{
+		oAbsolue: function oAbsolue(oValeur) { return oValeur.oAbsolue(); },
+		oArrondi: function oArrondi(oValeur, nPrecision) { return oValeur.oArrondi(nPrecision); },
+		nArrondiVersZero: function nArrondiVersZero(oValeur) { return oValeur.nArrondiVersZero(); },
+		bEstNegatif: function bEstNegatif(oValeur) { return oValeur.bEstNegatif(); },
+		bEstPair: function bEstPair(oValeur) { return oValeur.bEstPair(); },
+		nLog10Arrondi: function nLog10Arrondi(oValeur) { return oValeur.nLog10Arrondi(); },
+		oPartieEntiere: function oPartieEntiere(oValeur) { return oValeur.oPartieEntiere(); }
+	};
+
+	function __oGetOperations(oValeur)
+	{
+		// GP 22/09/2015 : Gestion des numériques
+		switch (clWDUtil.oGetTypeEntendu(oValeur))
+		{
+		case 5: // WLT_UI8
+		case 9: // WLT_I8
+		case 13: // WLT_DECIMAL
+			// oGetTypeEntendu retourne WLT_I8 pour WLT_UIX
+//		case 14: // WLT_UIX
+			return ms_oOperationsNumeriques;
+		default:
+			return ms_oOperations;
+		}
+	}
+
+	// Valeur absolue
+	clWDUtil.oAbsolue = function oAbsolue(oValeur)
+	{
+		return __oGetOperations(oValeur).oAbsolue(oValeur);
+	};
+
+	// Arrondi du WL
+	clWDUtil.oArrondi = function oArrondi(oValeur, nPrecision)
+	{
+		// Ce n'est plus WDJS qui ajoute le paramètre optionnel
+		if (undefined === nPrecision)
+		{
+			nPrecision = 0;
+		}
+
+		return __oGetOperations(oValeur).oArrondi(oValeur, nPrecision);
+	};
+	clWDUtil.oArrondiInferieur = function oArrondiInferieur(oValeur, nPrecision)
+	{
+		// Ce n'est plus WDJS qui ajoute le paramètre optionnel
+		if (undefined === nPrecision)
+		{
+			nPrecision = 0;
+		}
+
+		return __oGetOperations(oValeur).oArrondiInferieur(oValeur, nPrecision);
+	};
+	clWDUtil.oArrondiSuperieur = function oArrondiSuperieur(oValeur, nPrecision)
+	{
+		// Ce n'est plus WDJS qui ajoute le paramètre optionnel
+		if (undefined === nPrecision)
+		{
+			nPrecision = 0;
+		}
+
+		return __oGetOperations(oValeur).oArrondiSuperieur(oValeur, nPrecision);
+	};
+
+	// Arrondi vers 0 : si la valeur est négative, Math.floor va vers le bas au lieu de vers le haut
+	clWDUtil.nArrondiVersZero = function nArrondiVersZero(oValeur)
+	{
+		return __oGetOperations(oValeur).nArrondiVersZero(oValeur);
+	};
+
+	// Si le nombre est négatif (pas d'appel depuis le WL)
+	clWDUtil.bEstNegatif = function bEstNegatif(oValeur)
+	{
+		return __oGetOperations(oValeur).bEstNegatif(oValeur);
+	};
+
+	// Indique si un nombre est pair ou impair
+	clWDUtil.bEstPair = function bEstPair(oValeur)
+	{
+		return __oGetOperations(oValeur).bEstPair(oValeur);
+	};
+	clWDUtil.bEstImpair = function bEstImpair(oValeur)
+	{
+		return !this.bEstPair(oValeur);
+	};
+
+	// Log10
+	clWDUtil.nLog10Arrondi = function nLog10Arrondi(oValeur)
+	{
+		return __oGetOperations(oValeur).nLog10Arrondi(oValeur);
+	};
+
+	// Calcul le maximum d'une série de nombres
+	function __oMinMax(tabArguments, bMin)
+	{
+		// On a forcément plusieurs arguments (vérifié en WL)
+		var oChoix;
+		clWDUtil.bForEach(tabArguments, function (oArgument)
+		{
+			// On modifie le choix si :
+			// - On est sur le premier argument
+			// - La comparaison réussie.
+			// bComparaison vérifie oChoix < oArgument, donc pour :
+			// Min : on veux oArgument < oChoix donc bNot a true
+			// Max : on veux oChoix < oArgument donc bNot a false
+			if ((undefined === oChoix) || clWDUtil.bComparaison(oChoix, oArgument, false, bMin, false, false))
+			{
+				oChoix = oArgument;
+			}
+			return true;
+		});
+		return oChoix;
+	}
+	clWDUtil.oMax = function oMax()
+	{
+		return __oMinMax(arguments, false);
+	};
+	clWDUtil.oMin = function oMin()
+	{
+		return __oMinMax(arguments, true);
+	};
+
+	// Partie entière et partie décimale
+	clWDUtil.oPartieEntiere = function oPartieEntiere(oValeur)
+	{
+		// Comportement sur les nombres négatifs : la partie entière de -3.5 est -4
+		return __oGetOperations(oValeur).oPartieEntiere(oValeur);
+	};
+	clWDUtil.oPartieDecimale = function oPartieDecimale(oValeur)
+	{
+		// Calcule Abs(x)- PartieEntière(Abs(X))
+		var oValeurAbsolue = this.oAbsolue(oValeur);
+		return this.oSoustraction(oValeurAbsolue, this.oPartieEntiere(oValeurAbsolue));
+	};
+})();
+
+//////////////////////////////////////////////////////////////////////////
+// Comparaison
+
+(function ()
+{
+	"use strict";
+
+	function __oPreparePourComparaison(oValeur, bSouple, bForceChaine)
+	{
+		return __oPreparePourComparaisonAvecType(oValeur, bSouple, bForceChaine, clWDUtil.oGetTypeEntendu(oValeur), undefined)
+	}
+
+	function __oPreparePourComparaisonAvecType(oValeur, bSouple, bForceChaine, oTypeValeur, oTypeValeurAutre)
+	{
+		// Par sécurité, force la conversion des valeurs du framework V2 vers le type natif
+		var iValeurBase;
+		if (window.NSPCS && (iValeurBase = NSPCS.iGetAsBase(oValeur)))
+		{
+			oValeur = iValeurBase.valueOf();
+		}
+
+		var oValeurPourNumerique = oValeur;
+		switch (oTypeValeur)
+		{
+		case 1: // WLT_BOOL
+			oValeurPourNumerique = oValeur ? "1" : "0";
+			// falls through
+		case 2: // WLT_UI1
+		case 3: // WLT_UI2
+		case 4: // WLT_UI4
+		case 6: // WLT_I1
+		case 7: // WLT_I2
+		case 8: // WLT_I4
+		case 11: // WLT_R4
+		case 12: // WLT_R8
+//		case 15: // WLT_HWND
+			// Si l'autre valeur est un numérique, on fait la conversion du nombre en numérique
+			switch (oTypeValeurAutre)
+			{
+			case 5: // WLT_UI8
+			case 9: // WLT_I8
+			case 13: // WLT_DECIMAL
+			case 14: // WLT_UIX		// oGetTypeEntendu retourne WLT_I8 pour WLT_UIX
+				return __oPreparePourComparaisonNumerique(oValeurPourNumerique);
+			}
+			break;
+		case 5: // WLT_UI8
+		case 9: // WLT_I8
+		case 13: // WLT_DECIMAL
+			// oGetTypeEntendu retourne WLT_I8 pour WLT_UIX
+//		case 14: // WLT_UIX
+			// Vu avec YB : La comparaison impliquant des numériques est la suivante :
+			// - Comparaison avec un type "chaine" => Conversion du numérique en chaine et comparaison lexicographique
+			// - Comparaison avec un type "numérique" (= dans le sens type avec nombre dedans (ce qui inclus les booléesn) => Conversion en numérique et comparaison numérique
+			switch (oTypeValeurAutre)
+			{
+			case 1: // WLT_BOOL
+				oValeurPourNumerique = oValeur ? "1" : "0";
+				// falls through
+			case 2: // WLT_UI1
+			case 3: // WLT_UI2
+			case 4: // WLT_UI4
+			case 5: // WLT_UI8
+			case 6: // WLT_I1
+			case 7: // WLT_I2
+			case 8: // WLT_I4
+			case 9: // WLT_I8
+			case 11: // WLT_R4
+			case 12: // WLT_R8
+			case 13: // WLT_DECIMAL
+//			case 14: // WLT_UIX
+//			case 15: // WLT_HWND
+				// oGetTypeEntendu retourne WLT_I8 pour WLT_UIX
+				return __oPreparePourComparaisonNumerique(oValeurPourNumerique);
+			default:
+				return oValeur.toString();
+			}
+		case 24:
+		case 25:
+		case 26:
+			// WLT_DATEW (et WLT_DATEA que l'on ne manipule pas en JS), WLT_TIMEW (et WLT_TIMEA que l'on ne manipule pas en JS) et WLT_DATETIME
+			return oValeur.toStringAvecInvalide();
+		case 27:
+			// WLT_DUREE
+			// GP 23/10/2014 : QW250417 : Cast en chaine si l'autre opérateur est une chaine
+			if (oTypeValeurAutre === "string")
+			{
+				return oValeur.toString();
+			}
+			else
+			{
+				return oValeur.m_nValeur;
+			}
+		}
+
+		if (bSouple)
+		{
+			// GP 17/11/2013 : QW238613 : On doit gérer le cas ou la valeur n'est pas une chaine
+			oValeur = clWDUtil.sSupprimeEspacesDebutFin(oValeur).toUpperCase();
+			// GP 31/03/2021 : TB118374 : Vrai opérateur de comparaison souple pour les navigateurs qui le supportent.
+			if (String.prototype.normalize)
+			{
+				// Note : pas besoin de "recomposer". Si la chaîne contenant un autre caractère qui a été décomposé c'est qu'il était invalide.
+				oValeur = oValeur.normalize("NFD").replace(/[\u0300-\u036f\u1ab0-\u1aff\u1dc0-\u1dff\u20D0-\u20ff]/g, "");
+			}
+			return oValeur;
+		}
+		else if (bForceChaine && ("string" !== typeof oValeur))
+		{
+			return String(oValeur);
+		}
+		else
+		{
+			return oValeur;
+		}
+	}
+
+	function __oPreparePourComparaisonNumerique(oValeur)
+	{
+		// La comparaison numérique formate le nombre sous la forme d'une chaine :
+		// - Signe (toujours)
+		// - Partie entière avec des 0 sur le nombre maximal de la precision.
+		// - "."
+		// - Partie décimale avec des 0 sur le nombre maximal de la precision.
+		// 77 : 38 * 2 + 1
+		var sValeur = clWDUtil.sNumeriqueVersChaine(oValeur, "+077.38f");
+
+		// L'ordre lexico graphique nous pose ensuite un problème pour les nombres négatifs :
+		// - Le signe : "+" < "-". Donc on remplace "+" par "B" et "-" par "A" pour avoir "A" < "B".
+		// - Les chiffres doivent aussi être tranformées car -2 < -1 mais "1" < "2". On remplace donc 0 par 9, 1 par 8, ... 8 par 1 et 9 par 0.
+		// (il n'y a pas de problème si on compare un nombre négatif avec un nombre positif car le signe au début fait la différence).
+		sValeur = sValeur.replace(/[-]/g, "A").replace(/[+]/g, "B");
+
+		// oValeur n'est pas forcément un numérique
+		if (clWDUtil.bEstNegatif(oValeur))
+		{
+			// Pour avoir le code du nouveau caractère il faut : <Code de 9> - <Code de caractère> + <Code de 0>
+			// Ce qui est équivalent : <Code de 9> + <Code de 0> - <Code de caractère>
+			var nBase = "9".charCodeAt(0) + "0".charCodeAt(0);
+			sValeur = sValeur.replace(/\d/g, function (sCaractere) { return String.fromCharCode(nBase - sCaractere.charCodeAt(0)); });
+		}
+
+		return sValeur;
+	}
+
+	// Comparaison de deux valeurs.
+	// Permet la comparaison des types Date, Heure, DateHeure et Durée
+	// Parametres selon les opérateurs
+	//			Equivalent	bEgal	bNot	bSouple	bInverse
+	// x = y				true	false	false	false
+	// x ~= y				true	false	true	false
+	// x <> y	!(x = y)	true	true	false	false
+	// x < y				false	false	false	false
+	// x <= y	!(y < x)	false	true	false	true
+	// x > y	y < x		false	false	false	true
+	// x >= y	!(x < y)	false	true	false	false
+	clWDUtil.bComparaison = function bComparaison(oValeur1, oValeur2, bEgal, bNot, bSouple, bInverse)
+	{
+		// Préparation des parametres
+		var oTypeValeur1 = clWDUtil.oGetTypeEntendu(oValeur1);
+		var oTypeValeur2 = clWDUtil.oGetTypeEntendu(oValeur2);
+		oValeur1 = __oPreparePourComparaisonAvecType(oValeur1, bSouple, false, oTypeValeur1, oTypeValeur2);
+		oValeur2 = __oPreparePourComparaisonAvecType(oValeur2, bSouple, false, oTypeValeur2, oTypeValeur1);
+
+		if (bInverse)
+		{
+			var oTmp = oValeur1;
+			oValeur1 = oValeur2;
+			oValeur2 = oTmp;
+		}
+
+		// Effectue la comparaison
+		// QW448900 : La comparaison est bien avec "==".
+		var bRes = bEgal ? (oValeur1 == oValeur2) : (oValeur1 < oValeur2);
+		return bNot ? !bRes : bRes;
+	};
+
+	// Vérification des intervalles
+	clWDUtil.bIntervalle = function bIntervalle(oValeur1, bAvecEgal1, oValeur2, bAvecEgal2, oValeur3)
+	{
+		function bCompare(oValeurA, bAvecEgal, oValeurB)
+		{
+			return bAvecEgal ? oValeurA <= oValeurB : oValeurA < oValeurB;
+		}
+		return bCompare(oValeur1, bAvecEgal1, oValeur2) && bCompare(oValeur2, bAvecEgal2, oValeur3);
+	};
+
+	// Récupère la méthode de comparaison
+	clWDUtil.nRechercheDefaut = -1;

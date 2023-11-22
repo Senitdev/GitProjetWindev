@@ -1,0 +1,161 @@
+#To edit and compare internal_properties, use WINDEV integrated tools.
+#Internal properties refer to the properties of controls in windows, reports, etc.
+info :
+ name : PersonneImpl
+ major_version : 27
+ minor_version : 0
+ type : 4
+ description : ""
+ subtype : 0
+class :
+ identifier : 0x155c976b1b77dee4
+ internal_properties : BwAAAAcAAAB2/vstTMCJbS/hlxjFxirSqKvCUuv8YxgpWyl7S3iA
+ code_elements :
+  type_code : 10
+  p_codes :
+   -
+     code : |1+
+      PersonneImpl est une Classe 
+      implemente PersonneInt
+      FIN
+     type : 131072
+  procedures :
+   -
+     name : Constructeur
+     procedure_id : 1539271658932068068
+     type_code : 27
+     code : |1+
+      procédure Constructeur()
+      
+     type : 589824
+   -
+     name : Destructeur
+     procedure_id : 1539271658932133604
+     type_code : 28
+     code : |1+
+      procédure Destructeur()
+      
+     type : 655360
+   -
+     name : testAjout
+     procedure_id : 1539275064841993066
+     type_code : 12
+     code : |1+
+      // Résumé : <indiquez ici ce que fait la procédure>
+      // Syntaxe :
+      //testAjout ()
+      //
+      // Paramètres :
+      //	Aucun
+      // Valeur de retour :
+      // 	Aucune
+      //
+      // Exemple :
+      // <Indiquez ici un exemple d'utilisation>
+      //
+      procédure testAjout(pers est une Personne)
+      SI(pers.nom="" OU pers.prenom="" OU pers.adresse="") ALORS
+      	ToastAffiche("Veuillez remplir les champs")
+      	RETOUR
+      FIN
+      nclient est une chaine="Client"
+      {nclient+".prenom"}=pers.prenom
+      {nclient+".nom"}=pers.nom
+      {nclient+".adresse"}=pers.adresse
+      HAjoute({nclient})
+      ToastAffiche("Ajouter avec succes")
+     type : 458752
+   -
+     name : testModif
+     procedure_id : 1539275155036326610
+     type_code : 12
+     code : |1-
+      // Résumé : <indiquez ici ce que fait la procédure>
+      // Syntaxe :
+      //testModif (<pers> est Personne)
+      //
+      // Paramètres :
+      //	pers (Personne) : <indiquez ici le rôle de pers>
+      // Valeur de retour :
+      // 	Aucune
+      //
+      // Exemple :
+      // <Indiquez ici un exemple d'utilisation>
+      //
+      //	Personne : <indiquez ici le rôle de id>
+      procédure testModif(pers est une Personne)
+      SI(pers.nom="" OU pers.prenom="" OU pers.adresse="" ou pers.IDClient=0) ALORS
+      	ToastAffiche("Veuillez remplir les champs")
+      	RETOUR
+      FIN
+      nclient est une chaine="Client"
+      SI pers.IDClient<>0 ALORS
+      	HLitRecherchePremier(Client,IDClient,pers.IDClient)
+      	SI htrouve(Client) ALORS
+      		{nclient+".prenom"}=pers.prenom
+      		{nclient+".nom"}=pers.nom
+      		{nclient+".adresse"}=pers.adresse
+      		HModifie({nclient})
+      	FIN
+      FIN
+      ToastAffiche("Client modifier avec succes")
+     type : 458752
+   -
+     name : testSupprime
+     procedure_id : 1539275249525695143
+     type_code : 12
+     code : |1+
+      // Résumé : <indiquez ici ce que fait la procédure>
+      // Syntaxe :
+      //testSupprime (<id> est entier)
+      //
+      // Paramètres :
+      //	id (entier) : <indiquez ici le rôle de id>
+      // Valeur de retour :
+      // 	Aucune
+      //
+      // Exemple :
+      // <Indiquez ici un exemple d'utilisation>
+      //
+      procédure testSupprime(id est un entier)
+      
+     type : 458752
+   -
+     name : lister
+     procedure_id : 1539298261962482915
+     type_code : 12
+     code : |1+
+      // Résumé : <indiquez ici ce que fait la procédure>
+      // Syntaxe :
+      //[ <Résultat> = ] lister ()
+      //
+      // Paramètres :
+      //	Aucun
+      // Valeur de retour :
+      // 	tableau (Personne) : <indiquez ici le rôle de la valeur de retour>
+      //
+      // Exemple :
+      // <Indiquez ici un exemple d'utilisation>
+      //
+      procédure lister()
+      mafic est une chaine="Client"
+      montab est un tableau de Personne
+      maReq est une chaine="SELECT* FROM "+{mafic}
+      maSourceP est une source de Données
+      SI HExécuteRequêteSQL(maSourceP,hRequêteDéfaut,maReq)=Vrai ALORS
+      	FichierVersTableau(montab,maSourceP)
+      FIN
+      renvoyer  montab
+      
+     type : 458752
+  procedure_templates : []
+  property_templates : []
+ code_parameters :
+  internal_properties : BwAAAAcAAAA6ih3UbgNXHwTtiPSFUEj+2fi/m7v4QV2rqidAupM=
+  original_name : Classe1
+resources :
+ string_res :
+  identifier : 0x155c97551b748b84
+  internal_properties : BwAAAAcAAAAnMYFQ1bL/vz9ehh7L22SNNSlIzGTOI8h5F/WtgDNP
+custom_note :
+ internal_properties : BwAAAAcAAABtB9HWVzrXO2+4NDRVK0vmzaNKrCKqH1DBX30lMmGZ
