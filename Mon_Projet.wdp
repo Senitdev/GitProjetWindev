@@ -21,6 +21,9 @@ project :
      major_version : 1
      internal_generation_version : 1
     language : 1
+    new_features_help :
+     name : ""
+     internal_properties : BwAAAAcAAAAZX/0Gn6WDNYx985bUUr1hk+3HrTBcS0fIdlW4of8p4t+16lx9fKSX3byimd5bLeMbvs+ID72QkQ==
  elements :
   identifier : 0x453983bd00ad3efc
   elements :
