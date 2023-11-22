@@ -118,6 +118,18 @@ class :
       // <Indiquez ici un exemple d'utilisation>
       //
       procédure testSupprime(id est un entier)
+      Si id<1 ALORS
+      	Erreur("Veuillez sélectionner l'id du client")
+      	retour
+      FIN
+      nomfic est une chaine="Client"
+      sqlCode est une chaine="DELETE FROM "+{nomfic}+ " Where "+ {nomfic+".IDClient"}+"="+id
+      maMesdonne est une source de données
+      SI HExécuteRequêteSQL(maMesdonne,hRequêteDéfaut,sqlCode)=Faux ALORS
+      	Trace("Erreur"+HErreurInfo)
+      sinon
+      	ToastAffiche("Supprime avec requete")
+      FIN
       
      type : 458752
    -

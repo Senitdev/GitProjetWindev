@@ -15,6 +15,7 @@ Sauvegarde
 *.waudit
 *.wdcoverage
 *.wpf
+*.exe
 HstDuree.log
 #
 #WEBDEV
