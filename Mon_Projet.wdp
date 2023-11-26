@@ -23,7 +23,7 @@ project :
     language : 1
     new_features_help :
      name : ""
-     internal_properties : BwAAAAcAAAAZX/0Gn6WDNYx985bUUr1hk+3HrTBcS0fIdlW4of8p4t+16lx9fKSX3byimd5bLeMbvs+ID72QkQ==
+     internal_properties : BwAAAAcAAAChIjrjrN4nGUlyIf4CbDJA0mHAFDwF2qV5RqIfUPV79mzXx8xeTcarsh64hxb84zMBKCjxoj16
  elements :
   identifier : 0x453983bd00ad3efc
   elements :
@@ -74,6 +74,12 @@ project :
      identifier : 0x455c95912c1da69f
      internal_properties : BwAAAAcAAADfuzfr2IWtvgrHYNS4VMgzL3IuJohzJiipJXQZ107MBDA8YUXFr3Jza9DKNv7yjgLKSg==
      physical_name : .\Personne.wdc
+     type : 4
+   -
+     name : MEmployer
+     identifier : 0x455f86d70d2e1189
+     internal_properties : BwAAAAcAAAA1ER0BvpuTTATYYZ4tMc3X/b44eFxShqlODb3BvncfgUe18p+Ijfpwad7YIOAQ6NggIA==
+     physical_name : .\MEmployer.wdc
      type : 4
   other_elements :
    -
