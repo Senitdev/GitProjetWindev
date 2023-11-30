@@ -1,0 +1,51 @@
+#To edit and compare internal_properties, use WINDEV integrated tools.
+#Internal properties refer to the properties of controls in windows, reports, etc.
+info :
+ name : FEN_testkha
+ major_version : 27
+ minor_version : 0
+ type : 2
+ description : ""
+ subtype : 0
+window :
+ name : FEN_testkha
+ identifier : 0x2568aae1008f1c1e
+ internal_properties : BwAAAAcAAACPuojTg4TimGUDpqwt2Qdt+N6i3LOoH8T/AL+I+zPEvsdX1/3Nu4Cac+T1tq8IfQiPrJoGQt2k9M+YKS1U9uqUrOXFV0pijEbSoGhFL/vBCzuXPQh4lx2GbAomEibciDwcUmcl8nn5yr/Uez/DMdQ2VoKg89YAFDNBwkuPbROioJB073hnWNo/VUwXEVMvCNqq/Xh9mCZQExxEW0i2CSgL7xdNmqE6QwfR4XrEiQ7+mOBP8apnNqx1jc7UE15eDRwjWEOgbyrgZ8xnEmBEqcWSo/knYr+/iUaEcc8Sw2ZKKRY7FO3WIRPwUmxagelhmSyJ9v1sb8AgnXAYBJ0K6roofubrFVHLKSwqxGKJg4hXTTozDpoEoUAhRL8TFMO5ad75rv0sLVuE6yn9FF+SDLb+TfQV3DcNjrF0CUuO1/U9J1Cf/JNpBFqT4yzl8Fq68HdWjZYUysocH3B5nj3P/x7VG/fRKh54Mp551qz1NBre9tUs6s9Sps3dPsUldodd1+FlMatEtcpzy6bFQdZel/Q+fePRXqiFgzxU8TjOjirSGmhKPufYeLnbOVQ+/GL+oQsplCn07Gs6qitYL8MXrVexYu4FZT2hMNkCh+nGDuCWKRw7XQ/121oLd8gaN6CIBDABcptc666fmc7509Idjyld23kY47l90L7xAiS0hlbiJUwpgHM=
+ controls : []
+ menu :
+  name : _Menu
+  identifier : 0x292573e513b5f221
+  internal_properties : BwAAAAcAAAC1HpRZNO0Ki8YeO+BhoREZ2l00yAD30OdHp0uylYyN7re8px35Qz5ovx7tbJQNVb7bxGtUDTWLT8/BwtmGh5FaUN3QESTKYTLaSBh6VAzOkIpM/T1QqWoLNkahlemzm7zvKRU1XpaHt816e+v3tJT5yRlzDtkrBYwkGnR0DRsppLpR1zUCiLkKdNqf371sR38Oi/LZOadCwRleYz7/V+XNsQrtSeJ7+7WG11d+w4BpqXhTQt8Bhyss2t4++BzSslGiog==
+  options : []
+ languages :
+  - fr-FR
+ popup_menus : []
+ message_bar :
+  internal_properties : BwAAAAcAAADG0006i3ptxMcUE+O5cGvDhb43eRlY9UEE1z/7izK93v/ToMiwACETQQw4eQhZuJRMFa6SBwwT+zSdDbdc5HEkXDob51ldPFNKsP+0MWY=
+ code_elements :
+  type_code : 1
+  p_codes :
+   -
+     code : |1+
+      PROCEDURE MaFenêtre()
+   -
+     type : 180
+     enabled : false
+   -
+     type : 230
+     enabled : false
+   -
+     code : |1-
+      
+     type : 40
+ code_parameters :
+  internal_properties : BwAAAAcAAAARaqIs1pWWTrjJkc2sbefp8NGAHSVvdRgpQIePRe9rhkbpERRVEF+Nx8mIqTxrVGdwHX99jtU=
+  original_name : Modele1
+resources :
+ string_res :
+  identifier : 0x1568aad80020f9f0
+  internal_properties : BwAAAAcAAAAZ++HSz2luvwiNhadWl8v3mh2d0Pq0fCIps02kogrcwVHmCg==
+custom_note :
+ internal_properties : BwAAAAcAAAC68/W0/adbG0nFCRhrE42B5HRnbDzVHaz86sSQyxlBk7I=
+rad :
+ internal_properties : BwAAAAcAAABoAN7PLpwJW3EiA7WVZdCA5EwrCA1rvutcDHooMWKe
