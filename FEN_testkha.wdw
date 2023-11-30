@@ -10,23 +10,37 @@ info :
 window :
  name : FEN_testkha
  identifier : 0x2568aae1008f1c1e
- internal_properties : BwAAAAcAAACPuojTg4TimGUDpqwt2Qdt+N6i3LOoH8T/AL+I+zPEvsdX1/3Nu4Cac+T1tq8IfQiPrJoGQt2k9M+YKS1U9uqUrOXFV0pijEbSoGhFL/vBCzuXPQh4lx2GbAomEibciDwcUmcl8nn5yr/Uez/DMdQ2VoKg89YAFDNBwkuPbROioJB073hnWNo/VUwXEVMvCNqq/Xh9mCZQExxEW0i2CSgL7xdNmqE6QwfR4XrEiQ7+mOBP8apnNqx1jc7UE15eDRwjWEOgbyrgZ8xnEmBEqcWSo/knYr+/iUaEcc8Sw2ZKKRY7FO3WIRPwUmxagelhmSyJ9v1sb8AgnXAYBJ0K6roofubrFVHLKSwqxGKJg4hXTTozDpoEoUAhRL8TFMO5ad75rv0sLVuE6yn9FF+SDLb+TfQV3DcNjrF0CUuO1/U9J1Cf/JNpBFqT4yzl8Fq68HdWjZYUysocH3B5nj3P/x7VG/fRKh54Mp551qz1NBre9tUs6s9Sps3dPsUldodd1+FlMatEtcpzy6bFQdZel/Q+fePRXqiFgzxU8TjOjirSGmhKPufYeLnbOVQ+/GL+oQsplCn07Gs6qitYL8MXrVexYu4FZT2hMNkCh+nGDuCWKRw7XQ/121oLd8gaN6CIBDABcptc666fmc7509Idjyld23kY47l90L7xAiS0hlbiJUwpgHM=
+ internal_properties : BwAAAAcAAAAoPUVoMW1Ljl4PXc1xATuTbSRQSbkFzRZwQgdkysQ2ach//EW0n4B4BRwjF17jOEJJ06lWqoBzT1dsAEjggQ+h9hv3PNFU3iqRsDo6eASpJ9ZLIZfsUMVe3lb0sSWi1lPoN2hVBjUmOyMsjJ+XWBpuSPLow2fY8R/pjKcL2k78+GXn1n7C352qvbxWoIA4dVye9sstZdwi7tpjjxM/qV5lWA5z+kxzRHX7Mel87zSsRSWq45UY4jr5t7g6RuZZARoxPrncQKlZlFn4FdockFqbtf8kAf4cATwIHWf8OXj81dFsg7pkATNcUZFS55bsfR/xrSyN4Mbdw/buyCDrU9PJoYYUF+rM7RU+bR1HlkpUABQmcw1T8EPQQ+pdCXAqNUoh9rxWcchNH3M9CLzUGUpdorUU+O1VJud5lHAlnrH35LwcyDSnqqtoRJpKTXw27XHkKJhKcoxzbq6dTc1ZSzYLp6RYLFD9X6gUShfBlDNSSlAZb212MNAJwcxT2e3/pcx1nj/PZ0QDYTA2lGHyd2wBDNLTy5R8LFQCcZ1cSEPKMl0m6CjwAoccZPNhwdj4Z09BwDIU4EvzBOnrorB6Kt/TXq/Zptcve2TD8sIoGtr/+XTDH12esB+gLh7eqLkG7G+P6lB86z0iJtmQoD/jfB0i
+ properties :
+  width : 800
+  height : 600
+  widthClient : 798
+  heightClient : 568
  controls :
   -
-    name : BTN_SansNom1
+    name : BTN_Afficher
     identifier : 0x2568ac0501179031
-    internal_properties : BwAAAAcAAACVn9xAFKqzIZtOs3uL6sLkJIuAuT7S8nAK8DgsMcRAZxd8TwugGnByZKGrielYrCzuUr7eEskh+yOm3y3RGx2IA5grjVa7Ivcjvw+iaA2S4dA8z2ewG9dorMLAwFkexPAg/NVNj6eI+Zqyw6LCqlTvCMH3XNw0sZmhwo/QX8ar07k73JxqPUTeX7oZHVB2KwQvTSO1ibCWF+et1cwjrRfxpOTxABFo+B94khVODcHtJotYjqu2A9cU7f3Ty5hWMAOyDjSf6Zyw6gBFnWJDTw6UG/CZRCEJLGYm/lVxypqHTbz5xVyuRG/M/uPQkFXFe7wgZViK6xKKaMic1QnWRLMISC6DYWyj+cZJQev3V3Qtk/bET0jctAzviQB9BMfLXroyhZ+ASq4MkUfz910bhF5UJU1caGv3N4DzKuwBMzGKa5OmTD/MjfQl8+3FHx5pT2gFWM4711awArtkNw9TjfKV7PYCpCYSZ0syHgIKyMCz9TLu/cWN42KLjNG5ObKS+m/lNLvoRUswnGe73HAvCWdommXzzrfXrO9Vc74YTAaoyXBcL9ySzzd3Ouax+p2C31BPlYl9kuB2o1TDCAgNSnP6m9oLzw6tOnxzUBe/VBxJrhsgxAkAPbPQ7eztkYj/u+68x9RVvr67iKEPAgTRNIDjdW82PciCLE/c+Dd8ZayCHBG9OoY2YIpMU8xn7qIl2HpT4lK78HSBCOVd0V/jSgRXzk/Q9TGA2+A55Fc199oo0bXMy6mgY1chz6WgztMyCCv1B6GC0VOEUvXXGNxvYlLtFvwAwe2Uz50a5Hsa5fgRmRMp1NrrznEkb/VuusZ1Z4SlIIZCgccM
+    internal_properties : BwAAAAcAAABGlI83c9I2nXdPpGKlGk/B/oL+5xeQyyN/VRT5NxkZqJs9kjWJkvnUkL8njAHpDWj7vcnv5LeT4liC+XpHrIqPQXzQQYawJ9yWbOE4YBY6cvbFf2HjA3pVDI6xn/WwRT7T3edWQ2EL3Fq9YbNR6PyxWgDXJ6Km23+NUAaftjp21CftMlHBBKxMbG0TD/Zsrg9gvf9wIZZYMKAHG9IRUDEzOGPnGKbB4QDHMOyyfkDB4HXluilsPg5RBjzkFO+vuP1VlyC/t+Yjbepd3m4bXdEV2PysNMA4j/7miiU9LZY39ZIWeTEPsNa8lzVbTrp38nctXFFgL3ECECBRmxSkQlXeKciXBkyJ1M2WJGzRBScjAc0f+kSXbgoQexAG1Q9JJeBaw/UTEF0R0DbPFEsRUVMFWyi/w68HedMTTLuxi0H2K4akDhAPC5XPEc0QsmP1R5oDlKBydI6+MQi98cp0LohJUaz1J/W9OiVu7ZqRCRxDEttpTGPVjWL3C+0M3VohlYuWkvHJFpK0o8qEFe5c0DQhsUMVo0DH9f0OHEM+G6pKtesggNJz385b6qXNJyW7Kexdfx69OkJ1AZM2O+cZ+dr6VCw3E7Uly80OTRzuChHod4LwbsIuEdxW0n8mL26k6OlckjRhrufC2dnrePd2QEZLvndGWqtSHmXm4u00Uu8THUY/VRUhlsAcMYJ8PnTJHKub83YJs8Bj9SJCGl9hgkU7l6cOWuQRTHo+NTrhZUk1vFeufeGQzxglthCXzNvgjtfttC2TeNvdZ02frH2xgMrVETQSYujRJJtkAjPgIc1EpOaAWvn1kvPKzimummQrkQ==
+    properties :
+     x : 94
+     y : 79
+     width : 80
+     height : 24
     type : 4
     code_elements :
      type_code : 4
      p_codes :
+      -
+        code : |1+
+         info("Bonjour tout le monde ")
+        type : 18
       -
         type : 161
         enabled : false
  menu :
   name : _Menu
   identifier : 0x292573e513b5f221
-  internal_properties : BwAAAAcAAAC1HpRZNO0Ki8YeO+BhoREZ2l00yAD30OdHp0uylYyN7re8px35Qz5ovx7tbJQNVb7bxGtUDTWLT8/BwtmGh5FaUN3QESTKYTLaSBh6VAzOkIpM/T1QqWoLNkahlemzm7zvKRU1XpaHt816e+v3tJT5yRlzDtkrBYwkGnR0DRsppLpR1zUCiLkKdNqf371sR38Oi/LZOadCwRleYz7/V+XNsQrtSeJ7+7WG11d+w4BpqXhTQt8Bhyss2t4++BzSslGiog==
+  internal_properties : BwAAAAcAAABHivBqFH8xYQq/QELUltmClIuqm9KM3lg0XSaBAQ41WqT06R9JfU0qGK5sHUl8/xHCuvP3y9tLeLLOVaAgM2FjnfwSCRBgXqneLsHogwTYpIXuB1zp2uXtmOXYyGd6i+ek6BBvtJ0ylgF/MxkRihdZ26pl/9Jf5c+sxo07G0ZzHfcLEu9WD07gTSld25EPGWjvi/e5TxaHOZSRE8C5Ig+YdJawYdK89l+x1ofEmw3pfCNLUe3tNoiwg4AbC1jLdufmJ97Xc0JHDAy7gJsHBzEWwcuroqy2By4PJ4c6Wg==
   options : []
  languages :
   - fr-FR
