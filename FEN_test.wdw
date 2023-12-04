@@ -401,7 +401,7 @@ window :
      p_codes :
       -
         code : |1+
-         Ouvre(FEN_planning)
+         Ouvre(FEN_principale)
         type : 18
       -
         type : 161
