@@ -373,6 +373,19 @@ window :
       -
         type : 161
         enabled : false
+  -
+    name : LIB_Ma_version_est_à
+    identifier : 0x256dd48501477269
+    internal_properties : BwAAAAcAAABETLBoV1rmH73o1wlvPwTKDadrBN3pGELo7AO5P9uscfJjP8HGBPz+suPvCusy/1NYkKXcbUBlIjt9oBFC3FrwRt17hcci31xHrgZRGrkLn7abju0pnQmyMMIbn9JVlwiWpb+6xX7bBY4hUq6rw9tIapdj00XBI2l9+BMRsfZQ9NwH7ZTwswXQAX/R5dRKl7P6+xmW5Ua+OhyP+tVzjlBAAE2V45OQmC3J2hBSfZvFI7uXb74DmXhJ3HPacRT6nWcH7h844HuUPYtt8DqmDcMOFViQ6wQXkWWmd/HDD7w7HyPUVySNagdWnrJOWTy1IA9r00rQ/voM9aje3GGu0x+8vuKtXMkFXn0bcJk8YRF/rkTQUAAwbtVz7zO/aZHypAiOi9mP5/fnvKcrj+TSmcU6fL3Cq5hW7dAt4C8aw4npI5aJZQicJBLaSZ6sD+FN/41EbHe6i4PiNgBfRNM31H/SuHmCovaMRWXj3MhJl5Gbh1P0ySDTYyrmHbeYAw==
+    properties :
+     x : 579
+     y : 119
+     width : 187
+     height : 31
+    type : 3
+    code_elements :
+     type_code : 2
+     p_codes : []
  menu :
   name : _Menu
   identifier : 0x292573e513b5f221
