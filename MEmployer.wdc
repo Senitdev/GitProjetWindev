@@ -37,7 +37,6 @@ class :
      type_code : 28
      code : |1+
       procédure Destructeur()
-      
      type : 655360
   procedure_templates : []
   property_templates : []
